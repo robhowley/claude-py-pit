@@ -5,7 +5,7 @@
   "author": {
     "name": "robhowley"
   },
-  "repository": "https://github.com/roberthowley/claude-py-pit",
+  "repository": "https://github.com/robhowley/claude-py-pit",
   "license": "MIT",
   "keywords": ["python", "fastapi", "uv", "click", "cli", "rest-api", "scaffolding", "testing", "pytest"]
 }
