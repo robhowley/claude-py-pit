@@ -1,8 +1,7 @@
 ---
 description: Opinionated schema architecture for Python API projects
-  using Pydantic v2. Defines schema taxonomy, base model config, update
-  semantics, response envelopes, and serialization rules to prevent
-  schema drift in new projects.
+  using Pydantic v2. Defines request, response, query, command, batch,
+  and pagination schema patterns to prevent schema drift in new projects.
 disable-model-invocation: false
 ---
 
@@ -18,8 +17,8 @@ architectural decisions, and enforce a consistent API boundary between
 domain models and external representations.
 
 This skill **does not teach Pydantic basics**.\
-Instead it constrains architectural decisions so the model consistently
-generates predictable schema structures.
+It constrains schema architecture so the model consistently generates
+predictable request, response, query, and command structures.
 
 ------------------------------------------------------------------------
 
@@ -33,13 +32,25 @@ Apply this skill when the user:
 -   is creating a new resource schema
 -   is designing pagination or response envelopes
 -   is implementing create/update/read models
+-   is designing command endpoints, search/filter endpoints, batch
+    endpoints, or aggregate/reporting responses
 
 **Trigger phrases (user language):**
 
 > "add a schema for orders", "how should I structure my Pydantic
 > models?", "I need a request body for creating a user", "what's the
 > right way to do partial updates?", "how do I return paginated
-> results?", "should I use the same model for create and update?"
+> results?", "should I use the same model for create and update?",
+> "how do I model a cancel order action?", "I need a search endpoint
+> with filters"
+
+Do **not** apply this skill when:
+
+-   working with internal-only DTOs that never cross an API boundary
+-   using Pydantic for local parsing scripts
+-   the repository already uses a different schema architecture and the
+    user did not request a refactor
+-   working on non-API validation tasks
 
 ------------------------------------------------------------------------
 
@@ -66,10 +77,13 @@ projects.
 -   Invent new pagination or envelope formats per endpoint.
 -   Place validation or normalization logic in routers when it belongs
     in schema validators.
--   Introduce advanced configuration (alias generators, strict mode,
-    etc.) unless explicitly required.
+-   Introduce advanced configuration (alias generators, global strict
+    mode, etc.) unless explicitly required.
 -   Create multiple competing base schema classes without clear
     responsibility boundaries.
+-   Use `Optional[T]` to mean both "field may be omitted" and "field
+    may be null" without being deliberate about which behavior is
+    intended.
 
 If the repository already has established schema conventions, follow
 those conventions unless the user asks to refactor toward this
@@ -97,10 +111,12 @@ Before generating anything, check whether the repo already has a
     resource module.
 -   If extending: add only the new schema classes needed; do not
     rewrite existing ones without being asked.
--   Apply the taxonomy (`Create`, `Update`, `Read`) and base classes
-    from the sections below.
+-   Apply the appropriate role (Create, Update, Read, Filter, Command,
+    Batch, Summary) and base classes from the sections below.
 -   Include `model_dump(exclude_unset=True)` usage in the service layer
     whenever an `Update` schema is generated.
+-   Use explicit command/filter/batch/summary schemas — do not inline
+    these as untyped dicts or ad hoc parameter groups.
 
 **Step 3 — Verify and present**
 
@@ -120,6 +136,7 @@ schemas/
     user.py
     order.py
     pagination.py
+    common.py
 ```
 
 `base.py` defines shared base schema types:
@@ -128,6 +145,9 @@ schemas/
 -   CreateModel
 -   UpdateModel
 -   ReadModel
+-   QueryModel
+-   CommandModel
+-   BatchModel
 
 Resource schemas should live in their own module (e.g. `schemas/user.py`).
 
@@ -135,29 +155,21 @@ Resource schemas should live in their own module (e.g. `schemas/user.py`).
 
 # Schema Taxonomy
 
-Each resource MUST define separate schema roles.
+Each API should use explicit schema roles. Do not collapse unrelated
+endpoint types into CRUD-only naming.
 
-Example:
-
-```python
-class UserCreate(CreateModel):
-    ...
-
-class UserUpdate(UpdateModel):
-    ...
-
-class UserRead(ReadModel):
-    ...
-```
-
-Schema roles:
-
-| Schema            | Purpose                  |
-|-------------------|--------------------------|
-| Create            | Request body for POST    |
-| Update            | Partial update payload   |
-| Read              | Response serialization   |
-| Internal (optional) | Service-layer DTO      |
+| Schema Role        | Purpose                              |
+|--------------------|--------------------------------------|
+| Create             | Request body for resource creation   |
+| Update             | Partial update payload               |
+| Read               | Response serialization for a resource |
+| Filter / Query     | Search, list, and filtering inputs   |
+| CommandRequest     | Action-oriented request body         |
+| CommandResponse    | Action-oriented response body        |
+| BatchRequest       | Batch operation request body         |
+| Page               | Paginated response envelope          |
+| Summary / Report   | Aggregate or computed response shape |
+| Internal (optional) | Service-layer DTO                   |
 
 Rules:
 
@@ -165,6 +177,10 @@ Rules:
 -   Read models MUST NOT be reused for input
 -   Create models MUST declare required fields explicitly
 -   Update models MUST represent partial updates
+-   Command endpoints SHOULD use explicit command schemas even for small
+    payloads
+-   Aggregate/reporting endpoints MUST use explicit response schemas
+    rather than raw dictionaries
 
 ------------------------------------------------------------------------
 
@@ -201,6 +217,8 @@ These defaults enforce:
 Response models MUST support serialization from ORM objects.
 
 ```python
+from pydantic import ConfigDict
+
 class ReadModel(APIModel):
     model_config = ConfigDict(
         extra="forbid",
@@ -250,7 +268,7 @@ class UserCreate(CreateModel):
 
 Update models represent **partial updates**.
 
-Fields SHOULD be optional:
+Fields SHOULD be optional when omission means "leave unchanged":
 
 ```python
 class UserUpdate(UpdateModel):
@@ -268,6 +286,111 @@ for field, value in updates.items():
 ```
 
 Full model dumps MUST NOT be used for partial updates.
+
+Be explicit about the difference between:
+
+-   omitted field: do not change existing value
+-   explicit `null`: clear the value, if the API allows it
+
+Do not blur these two behaviors accidentally.
+
+------------------------------------------------------------------------
+
+# Query / Filter Schemas
+
+Search and listing endpoints SHOULD use explicit query/filter schemas
+instead of ad hoc parameter groupings.
+
+Example:
+
+```python
+class UserFilter(QueryModel):
+    email: str | None = None
+    active: bool | None = None
+    created_after: datetime | None = None
+```
+
+Use filter/query schemas for:
+
+-   list endpoints
+-   search endpoints
+-   reporting filters
+-   complex query parameter sets
+
+Do not invent different filter naming conventions per endpoint.
+
+------------------------------------------------------------------------
+
+# Command Request / Response Schemas
+
+Non-CRUD actions SHOULD use explicit command request/response schemas.
+
+Examples of command endpoints:
+
+-   activate user
+-   cancel order
+-   refund payment
+-   generate report
+
+Example:
+
+```python
+class RefundPaymentRequest(CommandModel):
+    reason: str
+    notify_customer: bool = True
+
+class RefundPaymentResponse(APIModel):
+    payment_id: int
+    status: str
+    refunded_at: datetime
+```
+
+Do not inline command payloads as untyped dictionaries.
+
+Naming pattern — pick one and use it consistently:
+
+-   `{Action}{Resource}Request`, or
+-   `{Resource}{Action}Request`
+
+------------------------------------------------------------------------
+
+# Batch Request Schemas
+
+Batch operations SHOULD use explicit batch request models.
+
+Example:
+
+```python
+class BulkDisableUsersRequest(BatchModel):
+    user_ids: list[int]
+```
+
+Do not pass bare lists as request bodies when the payload has semantic
+meaning.
+
+------------------------------------------------------------------------
+
+# Aggregate / Summary Response Schemas
+
+Computed endpoints MUST use explicit response schemas.
+
+Examples:
+
+-   analytics
+-   reports
+-   summaries
+-   stats
+
+Example:
+
+```python
+class RevenueSummary(APIModel):
+    total_revenue: Decimal
+    total_orders: int
+    average_order_value: Decimal
+```
+
+Do not return raw dictionaries for stable API responses.
 
 ------------------------------------------------------------------------
 
@@ -306,9 +429,15 @@ routers or services.
 Example:
 
 ```python
-@field_validator("email")
-def normalize_email(cls, value):
-    return value.lower()
+from pydantic import field_validator
+
+class UserCreate(CreateModel):
+    email: EmailStr
+
+    @field_validator("email")
+    @classmethod
+    def normalize_email(cls, value: str) -> str:
+        return value.lower()
 ```
 
 Routers and services SHOULD assume validated input.
@@ -317,15 +446,25 @@ Routers and services SHOULD assume validated input.
 
 # Naming Conventions
 
-Schemas MUST follow this naming pattern:
+Schemas MUST follow explicit naming patterns.
 
-`{Resource}Create`, `{Resource}Update`, `{Resource}Read`
+Recommended patterns:
+
+-   `{Resource}Create`
+-   `{Resource}Update`
+-   `{Resource}Read`
+-   `{Resource}Filter`
+-   `{Action}{Resource}Request`
+-   `{Action}{Resource}Response`
+-   `{Resource}Summary`
 
 Avoid ambiguous names such as:
 
 -   UserSchema
 -   UserDTO
 -   UserResponse
+-   UserAction
+-   ProcessUser
 
 Schema names should clearly communicate their role.
 
@@ -339,7 +478,9 @@ Before responding, verify:
 -   [ ] Create, Update, and Read roles are separated (no shared schemas)
 -   [ ] All schemas inherit from `APIModel` or `ReadModel`
 -   [ ] Update logic uses `model_dump(exclude_unset=True)`
+-   [ ] Omit-vs-null semantics are explicit in Update models
 -   [ ] No ORM models cross the API boundary
+-   [ ] Command/filter/batch/summary endpoints use explicit schemas, not dicts
 -   [ ] Pagination uses `Page[T]`, not a resource-specific type
 -   [ ] No new base classes were introduced without clear purpose
 -   [ ] Code shown is importable as written
@@ -353,5 +494,6 @@ Applying this skill ensures:
 -   predictable schema architecture
 -   strict request validation
 -   safe ORM serialization
+-   explicit command/query/batch/summary models
 -   consistent response structures
 -   maintainable API evolution
