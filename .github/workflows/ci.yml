@@ -29,3 +29,29 @@ jobs:
             fi
           done
           exit $failed
+
+      - name: Check README skills table matches skills/ directories
+        run: |
+          failed=0
+
+          # Every skills/ dir must appear in the README table
+          for dir in skills/*/; do
+            skill=$(basename "$dir")
+            if ! grep -qP "^\| $skill\s" README.md; then
+              echo "ERROR: skill '$skill' is missing from README skills table"
+              failed=1
+            else
+              echo "OK: '$skill' found in README"
+            fi
+          done
+
+          # Every row in the README table must have a matching skills/ dir
+          while IFS= read -r line; do
+            skill=$(echo "$line" | sed 's/^| *//;s/ *|.*//')
+            if [[ ! -d "skills/$skill" ]]; then
+              echo "ERROR: README references '$skill' but skills/$skill/ does not exist"
+              failed=1
+            fi
+          done < <(grep -P '^\| [a-z]' README.md | tail -n +2)
+
+          exit $failed
