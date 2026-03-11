@@ -29,4 +29,5 @@ Add the plugin marketplace, then install py-pit:
 | `settings-config`    | environment variable management, pydantic-settings, replacing os.getenv                    |
 | `sqlalchemy-models`  | ORM model design, SQLAlchemy 2.x patterns, relationships, migration-ready schema           |
 | `alembic-migrations` | adding Alembic, generating migrations, reviewing autogenerate diffs, safe schema evolution |
+| `fastapi-errors`     | FastAPI error handling, exception hierarchy, consistent API error responses                 |
 
