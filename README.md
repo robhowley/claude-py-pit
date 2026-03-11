@@ -1,8 +1,10 @@
 # py-pit
 
-Claude Code plugin for Python backend development with FastAPI, uv workflows, and Click CLI tooling.
+![version](https://img.shields.io/github/v/tag/robhowley/claude-py-pit)
 
-Provides Claude skills for common Python backend tasks that automatically activate when relevant work is detected in your repository.
+Opinionated Python backend workflows for Claude Code.
+
+`py-pit` encodes common backend development workflows as Claude skills for the modern Python API stack: FastAPI services, uv environments, SQLAlchemy models, Alembic migrations, configuration management, and CLI tooling.
 
 ## Install
 
@@ -15,16 +17,16 @@ Add the plugin marketplace, then install py-pit:
 
 ## Skills
 
-| Skill             | Trigger on                                                             |
-| ----------------- | ---------------------------------------------------------------------- |
-| fastapi-init      | new FastAPI service, scaffold an API, new microservice                 |
-| uv                | dependency management, lockfiles, env setup, migration from pip/poetry |
-| click-cli         | designing or generating a new Click CLI                                |
-| click-cli-linter  | auditing or improving an existing Click CLI                            |
-| pydantic-schemas  | request/response schema design, Pydantic v2 models, schema patterns    |
-| code-quality      | linting setup, Ruff, pre-commit, code health tooling                   |
-| docker-compose    | local dev Docker Compose setup, containerizing a project               |
-| settings-config   | environment variable management, pydantic-settings, replacing os.getenv |
-| sqlalchemy-models | ORM model design, SQLAlchemy 2.x patterns, relationships, migration-ready schema |
-| alembic-migrations | adding Alembic, generating migrations, reviewing autogenerate diffs, safe schema evolution |
+| Skill                | Activates when Claude detects                                                              |
+|----------------------|--------------------------------------------------------------------------------------------|
+| `fastapi-init`       | new FastAPI service, scaffold an API, new microservice                                     |
+| `uv`                 | dependency management, lockfiles, env setup, migration from pip/poetry                     |
+| `click-cli`          | designing or generating a new Click CLI                                                    |
+| `click-cli-linter`   | auditing or improving an existing Click CLI                                                |
+| `pydantic-schemas`   | request/response schema design, Pydantic v2 models, schema patterns                        |
+| `code-quality`       | linting setup, Ruff, pre-commit, code health tooling                                       |
+| `docker-compose`     | local dev Docker Compose setup, containerizing a project                                   |
+| `settings-config`    | environment variable management, pydantic-settings, replacing os.getenv                    |
+| `sqlalchemy-models`  | ORM model design, SQLAlchemy 2.x patterns, relationships, migration-ready schema           |
+| `alembic-migrations` | adding Alembic, generating migrations, reviewing autogenerate diffs, safe schema evolution |
 
