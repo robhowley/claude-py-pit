@@ -25,4 +25,5 @@ Add the plugin marketplace, then install py-pit:
 | code-quality      | linting setup, Ruff, pre-commit, code health tooling                   |
 | docker-compose    | local dev Docker Compose setup, containerizing a project               |
 | settings-config   | environment variable management, pydantic-settings, replacing os.getenv |
+| sqlalchemy-models | ORM model design, SQLAlchemy 2.x patterns, relationships, migration-ready schema |
 
