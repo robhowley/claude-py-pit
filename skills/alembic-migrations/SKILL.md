@@ -176,7 +176,7 @@ Before generating anything:
 
 1. Check whether `alembic/`, `alembic.ini`, and `alembic/env.py` already
    exist. If they do, **modify the existing configuration** rather than
-   reinitializing.
+   reinitializing. Never run `alembic init` if `alembic/` already exists.
 2. Identify where `Base` is defined. If the project used the
    sqlalchemy-models skill, it will be at `{pkg_name}/models/base.py`.
 3. Identify which module imports all models (typically
