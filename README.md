@@ -8,12 +8,20 @@ Opinionated Python backend workflows for Claude Code.
 
 ## Install
 
+### Claude Code
+
 Add the plugin marketplace, then install py-pit:
 
 ```
 /plugin marketplace add robhowley/claude-py-pit
 /plugin install py-pit@claude-py-pit
 ```
+
+### pi
+
+```bash
+pi install https://github.com/robhowley/claude-py-pit
+```  
 
 ## Skills
 
