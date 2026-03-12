@@ -25,8 +25,6 @@ The goal is to produce tests that are:
 Tests should **optimize for scanability and maintainability**, not
 clever abstractions.
 
-------------------------------------------------------------------------
-
 ## Core testing stance
 
 Prefer **simple local tests with minimal infrastructure**.
@@ -34,27 +32,19 @@ Prefer **simple local tests with minimal infrastructure**.
 Rules:
 
 -   Prefer **`TestClient`** for FastAPI endpoint tests whenever possible
--   Use **async clients only when the test genuinely requires async
-    behavior**
+-   Use **async clients only when the test genuinely requires async behavior**
 -   Default test databases to **SQLite via SQLAlchemy fixtures**
--   Do **not introduce Docker databases** unless the repository already
-    uses them for testing
+-   Do **not introduce Docker databases** unless the repository already uses them for testing
 -   External clients must be **mocked**, not called
 -   **No test classes** — top-level `test_*` functions only; fixtures handle all setup
+-   Each test covers a **distinct behavior** — no redundant assertions across tests
+-   Avoid mutable default arguments in fixtures and helpers
 
-Tests must run reliably with a simple:
-
-    pytest
-
-No external services should be required.
-
-------------------------------------------------------------------------
+Tests must run reliably with a simple `pytest`. No external services required.
 
 ## Project structure
 
 Tests should live in a `tests/` directory.
-
-Example layout:
 
     tests/
       conftest.py
@@ -63,36 +53,20 @@ Example layout:
       factories/
         user_factory.py
 
-Guidelines:
-
 -   `conftest.py` holds shared fixtures
 -   test files mirror application modules when possible
 -   factory fixtures may live in `tests/factories/` or `conftest.py`
 
-------------------------------------------------------------------------
-
 ## Fixture discipline
 
 Shared setup belongs in **pytest fixtures**, not duplicated code.
-
-Rules:
 
 -   Use `@pytest.fixture` for reusable setup
 -   Inspect existing fixtures **before creating new ones**
 -   Prefer **composing fixtures** instead of duplicating setup logic
 -   Keep fixture responsibilities narrow and clearly named
 
-Example:
-
-``` python
-@pytest.fixture
-def client(app):
-    return TestClient(app)
-```
-
 Avoid inline setup repeated across tests.
-
-------------------------------------------------------------------------
 
 ## Fixture scope
 
@@ -126,24 +100,9 @@ def db_session(engine) -> Session:
 
 The rollback in teardown means tests never bleed into each other even when they write data.
 
-------------------------------------------------------------------------
-
 ## Factory fixtures
 
-Use **factory fixtures** when tests require variations of objects.
-
-Factories are appropriate for:
-
--   sample data
--   request payloads
--   ORM objects
--   mocked clients
--   service configurations
-
-Factories are **not limited to data**. They may also produce configured
-mocks or dependency variants.
-
-Example:
+Use **factory fixtures** when tests require variations of objects. Factories are appropriate for sample data, request payloads, ORM objects, mocked clients, and service configurations — not just data.
 
 ``` python
 @pytest.fixture
@@ -158,10 +117,6 @@ def user_payload_factory():
 
     return _factory
 ```
-
-Factory fixtures prevent duplicated setup across tests.
-
-------------------------------------------------------------------------
 
 ## Avoid branching logic in fixtures
 
@@ -191,36 +146,11 @@ def payment_client_factory():
     return _factory
 ```
 
-Tests should control behavior explicitly rather than relying on fixture
-branching.
-
-------------------------------------------------------------------------
-
-## SQLAlchemy test database
-
-Tests should default to a **SQLite in-memory database** with
-transaction-per-test isolation.
-
-The three-fixture pattern:
-
-1.  Session-scoped engine — schema created once for the whole run
-2.  Function-scoped `db_session` — wraps each test in a transaction that rolls back
-3.  `client` fixture — overrides the FastAPI DB dependency with the test session
-
-See the **Fixture scope** section above for the engine/session implementation.
-
-Avoid introducing containerized databases for tests unless that pattern
-already exists in the repository.
-
-------------------------------------------------------------------------
+Tests should control behavior explicitly rather than relying on fixture branching.
 
 ## FastAPI dependency overrides
 
-Use **`app.dependency_overrides`** to swap FastAPI dependencies in tests.
-Do not patch internals directly.
-
-This is the correct pattern for replacing database sessions, auth providers,
-or any injected dependency:
+Use **`app.dependency_overrides`** to swap FastAPI dependencies in tests. Do not patch internals directly.
 
 ``` python
 @pytest.fixture
@@ -234,16 +164,11 @@ def client(db_session):
     app.dependency_overrides.clear()
 ```
 
-Always clear `dependency_overrides` in teardown so overrides don't leak
-between tests.
-
-------------------------------------------------------------------------
+Always clear `dependency_overrides` in teardown so overrides don't leak between tests.
 
 ## FastAPI testing
 
 Prefer `TestClient` for endpoint tests.
-
-Example:
 
 ``` python
 def test_health_endpoint(client):
@@ -253,37 +178,19 @@ def test_health_endpoint(client):
     assert response.json()["status"] == "ok"
 ```
 
-Use async clients only when necessary.
-
-------------------------------------------------------------------------
-
 ## External client mocking
 
 External services must be mocked.
-
-Rules:
 
 -   use `MagicMock(spec=ClientType)` or `create_autospec`
 -   do not make real network calls in unit tests
 -   assert the application's behavior, not the external service behavior
 
-Example:
-
-``` python
-client = MagicMock(spec=PaymentClient)
-client.charge.return_value = {"status": "ok"}
-```
-
-Shared mock setups should be implemented as **fixtures or factory
-fixtures**.
-
-------------------------------------------------------------------------
+Shared mock setups should be implemented as **fixtures or factory fixtures**.
 
 ## Parametrization
 
 Use pytest parametrization when only inputs vary.
-
-Example:
 
 ``` python
 @pytest.mark.parametrize(
@@ -297,97 +204,12 @@ def test_email_validation(email):
     ...
 ```
 
-Avoid duplicating identical test logic.
+## Deterministic time and data
 
-------------------------------------------------------------------------
-
-## Avoid redundant coverage
-
-Tests should verify **distinct behaviors**.
-
-Avoid:
-
--   repeating the same assertions across multiple tests
--   testing framework behavior
--   duplicating coverage across layers without reason
-
-Each test should justify its existence by covering a **unique behavior
-or edge case**.
-
-------------------------------------------------------------------------
-
-## Deterministic time
-
-Tests should not depend on the system clock.
-
-Guidelines:
-
--   freeze or control time in tests
--   use tools such as `freezegun` when testing time-based behavior
-
-Example:
+Tests should not depend on the system clock or random values. Freeze time with `freezegun`; use explicit, stable inputs rather than `uuid4()` or `random`.
 
 ``` python
-from freezegun import freeze_time
-
 @freeze_time("2025-01-01")
 def test_token_expiry():
     ...
 ```
-
-Time-dependent tests should always be deterministic.
-
-------------------------------------------------------------------------
-
-## Stable test data
-
-Avoid uncontrolled randomness in tests.
-
-Rules:
-
--   do not rely on random values for test behavior
--   prefer explicit, stable inputs
--   if randomness is necessary, seed it
-
-Bad:
-
-``` python
-email = f"user-{uuid4()}@example.com"
-```
-
-Better:
-
-``` python
-email = "user@example.com"
-```
-
-Deterministic test data makes failures reproducible.
-
-------------------------------------------------------------------------
-
-## Test design principles
-
-Tests should optimize for **human readability**.
-
-Guidelines:
-
--   avoid excessive branching logic
--   avoid clever abstractions
--   prefer explicit inputs
--   keep tests easy to scan
-
-Tests are read far more often than they are written.
-
-------------------------------------------------------------------------
-
-## Python hygiene in tests
-
-Follow normal Python best practices even in test code.
-
-Rules:
-
--   avoid mutable default arguments
--   keep fixtures small and focused
--   prefer explicit object construction over clever shortcuts
-
-Readable tests are more valuable than minimal tests.
