@@ -1,4 +1,4 @@
-# Skill: docker-compose
+# Skill: dockerize-service
 
 ## Core position
 

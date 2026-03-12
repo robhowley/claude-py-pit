@@ -25,7 +25,7 @@ Add the plugin marketplace, then install py-pit:
 | `click-cli-linter`   | auditing or improving an existing Click CLI                                                |
 | `pydantic-schemas`   | request/response schema design, Pydantic v2 models, schema patterns                        |
 | `code-quality`       | linting setup, Ruff, pre-commit, code health tooling                                       |
-| `docker-compose`     | local dev Docker Compose setup, containerizing a project                                   |
+| `dockerize-service`  | local dev Docker Compose setup, containerizing a project                                   |
 | `settings-config`    | environment variable management, pydantic-settings, replacing os.getenv                    |
 | `sqlalchemy-models`  | ORM model design, SQLAlchemy 2.x patterns, relationships, migration-ready schema           |
 | `alembic-migrations` | adding Alembic, generating migrations, reviewing autogenerate diffs, safe schema evolution |
