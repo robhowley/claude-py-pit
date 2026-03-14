@@ -1,5 +1,5 @@
 {
-  "name": "py-pit-skills",
+  "name": "@robhowley/py-pit-skills",
   "version": "3.1.1",
   "description": "Opinionated Python backend workflows as agent skills for FastAPI, uv, SQLAlchemy, Alembic, Click, and pytest",
   "keywords": ["pi-package"],
