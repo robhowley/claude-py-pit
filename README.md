@@ -19,9 +19,17 @@ Add the plugin marketplace, then install py-pit:
 
 ### pi
 
+Install from npm:
+
+```bash
+pi install npm:@robhowley/py-pit-skills
+```
+
+Or directly from GitHub:
+
 ```bash
 pi install https://github.com/robhowley/py-pit-skills
-```  
+```
 
 ## Skills
 
