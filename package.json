@@ -1,0 +1,20 @@
+{
+  "name": "py-pit-skills",
+  "version": "3.1.1",
+  "description": "Opinionated Python backend workflows as agent skills for FastAPI, uv, SQLAlchemy, Alembic, Click, and pytest",
+  "keywords": ["pi-package"],
+  "author": "robhowley",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/robhowley/py-pit-skills"
+  },
+  "files": [
+    "skills/",
+    "README.md",
+    "LICENSE"
+  ],
+  "pi": {
+    "skills": ["./skills"]
+  }
+}

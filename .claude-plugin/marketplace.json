@@ -1,5 +1,5 @@
 {
-  "name": "claude-py-pit",
+  "name": "py-pit-skills",
   "owner": {
     "name": "robhowley"
   },
@@ -11,7 +11,7 @@
       "name": "py-pit",
       "source": {
         "source": "github",
-        "repo": "robhowley/claude-py-pit"
+        "repo": "robhowley/py-pit-skills"
       }
     }
   ]
