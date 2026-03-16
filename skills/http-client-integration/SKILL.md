@@ -1,6 +1,7 @@
 ---
 name: http-client-integration
 description: Production-ready async HTTP client integration for Python backend services. Use this skill when adding or refactoring outbound API calls, building a vendor client, introducing retries and timeouts, validating external payloads, or replacing ad-hoc HTTP usage with a disciplined integration boundary.
+disable-model-invocation: false
 ---
 
 # Skill: http-client-integration
