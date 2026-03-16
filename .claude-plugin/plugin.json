@@ -1,6 +1,6 @@
 {
   "name": "py-pit",
-  "version": "4.0.1",
+  "version": "4.1.0",
   "description": "A Claude Code plugin for Python development",
   "author": {
     "name": "robhowley"
