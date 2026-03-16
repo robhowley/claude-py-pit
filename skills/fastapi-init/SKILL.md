@@ -1,6 +1,7 @@
 ---
 name: fastapi-init
 description: Scaffold a complete, production-ready FastAPI project from scratch. Use this skill whenever the user wants to create, initialize, start, or bootstrap a FastAPI service, REST API, or Python web service — even if they just say "new service", "new API", or "new microservice". Handles uv setup, standard FastAPI directory layout, uvicorn runner, click CLI entry point, and a full pytest suite with DI overrides, TestClient, and SQLite fixtures. Always invoke for new Python API projects.
+disable-model-invocation: false
 ---
 
 # fastapi-init
@@ -125,7 +126,7 @@ settings = Settings()
 
 ### {pkg_name}/db/session.py
 
-`get_db` is the single canonical source of truth for database sessions. Everything in the app and in tests flows through it — this is what makes DI overrides in tests work cleanly.
+`get_db` is the single canonical source of truth for database sessions in routes and tests — this is what makes DI overrides in tests work cleanly. Background tasks run outside the FastAPI DI lifecycle and must open sessions via `SessionLocal` directly.
 
 ```python
 from typing import Generator
