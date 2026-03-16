@@ -49,4 +49,5 @@ pi install https://github.com/robhowley/py-pit-skills
 | `pytest-service`     | writing tests for a FastAPI service, SQLAlchemy test fixtures, DI overrides, test setup    |
 | `request-correlation` | request tracing, correlation IDs, observability wiring, propagating context across task/job boundaries |
 | `http-client-integration` | outbound API calls, building a vendor client, introducing retries and timeouts, replacing ad-hoc HTTP usage |
+| `background-jobs-boundaries` | background task guardrails, misuse of FastAPI BackgroundTasks, when to use a real job system |
 
