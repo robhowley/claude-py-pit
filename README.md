@@ -47,4 +47,5 @@ pi install https://github.com/robhowley/py-pit-skills
 | `alembic-migrations` | adding Alembic, generating migrations, reviewing autogenerate diffs, safe schema evolution |
 | `fastapi-errors`     | FastAPI error handling, exception hierarchy, consistent API error responses                 |
 | `pytest-service`     | writing tests for a FastAPI service, SQLAlchemy test fixtures, DI overrides, test setup    |
+| `request-correlation` | request tracing, correlation IDs, observability wiring, propagating context across task/job boundaries |
 
