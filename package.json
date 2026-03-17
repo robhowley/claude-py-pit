@@ -1,7 +1,7 @@
 {
   "name": "@robhowley/py-pit-skills",
   "version": "4.3.0",
-  "description": "Opinionated Python backend workflows as agent skills for FastAPI, uv, SQLAlchemy, Alembic, Click, and pytest",
+  "description": "Opinionated Python API development skills for AI coding agents (Pi, Claude Code).",
   "keywords": [
     "pi-package"
   ],

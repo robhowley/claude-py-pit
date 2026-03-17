@@ -1,7 +1,7 @@
 {
   "name": "py-pit",
   "version": "4.3.0",
-  "description": "A Claude Code plugin for Python development",
+  "description": "Opinionated Python API development skills for AI coding agents.",
   "author": {
     "name": "robhowley"
   },
