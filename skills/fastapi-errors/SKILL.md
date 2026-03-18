@@ -47,6 +47,8 @@ Do **not** apply when:
 
 # Base Exception
 
+The `fastapi-init` skill scaffolds a minimal version of this class. This skill defines the complete pattern. If both are present, this skill's version is authoritative.
+
 The service defines one base exception for intentional application failures.
 
 Preferred naming pattern:
@@ -130,11 +132,18 @@ Example:
 ```python
 @app.exception_handler(AppError)
 async def handle_app_error(request: Request, exc: AppError):
+    if exc.context:
+        logger.warning(
+            exc.detail,
+            extra={"error_context": exc.context, "status_code": exc.status_code},
+        )
     return JSONResponse(
         status_code=exc.status_code,
         content={"detail": exc.detail},
     )
 ```
+
+The `**context` kwargs are for structured logging at the boundary, not for the client response. Use them to attach identifiers (e.g., `user_id=123`) that aid debugging without leaking internals.
 
 Response format is intentionally simple:
 
@@ -186,10 +195,15 @@ Log at minimum: request path, HTTP method, exception type, and correlation ID if
 
 In existing repositories, **inspect current error patterns before introducing new ones**.
 
-Follow these rules:
+To find existing patterns, search for:
 
-- Look for an existing internal base exception.
-- If one exists and is coherent, **extend it instead of creating a new base class**.
+- `class.*Error(Exception)` or `class.*Exception(Exception)` in the package
+- `exception_handler` registrations in the app factory or main module
+- `HTTPException` usage in service or domain code (a signal that the boundary is leaking)
+
+Then follow these rules:
+
+- If an existing internal base exception exists and is coherent, **extend it instead of creating a new base class**.
 - Integrate with existing exception handlers when possible.
 - Only introduce the recommended base-exception pattern if the repo lacks a clear contract or the user asks to refactor.
 

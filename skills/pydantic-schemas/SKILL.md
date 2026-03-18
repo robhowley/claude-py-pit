@@ -211,6 +211,32 @@ These defaults enforce:
 -   safe mutation in service-layer logic
 -   predictable enum serialization
 
+The remaining base classes are thin role markers. They exist to enforce
+naming discipline, not to add behavior (except where noted):
+
+```python
+class CreateModel(APIModel):
+    """Request body for resource creation."""
+
+class UpdateModel(APIModel):
+    """Partial update payload. Use model_dump(exclude_unset=True) in the service layer."""
+
+class QueryModel(APIModel):
+    """Search, list, and filtering inputs. All fields should be optional."""
+    model_config = APIModel.model_config.copy()
+    model_config["extra"] = "ignore"
+
+class CommandModel(APIModel):
+    """Action-oriented request body for non-CRUD endpoints."""
+
+class BatchModel(APIModel):
+    """Batch operation request body."""
+```
+
+`QueryModel` uses `extra="ignore"` because query parameters may include
+pagination or framework-injected fields that should not cause validation
+errors.
+
 ------------------------------------------------------------------------
 
 # Read Model (ORM Serialization)
@@ -218,17 +244,9 @@ These defaults enforce:
 Response models MUST support serialization from ORM objects.
 
 ```python
-from pydantic import ConfigDict
-
 class ReadModel(APIModel):
-    model_config = ConfigDict(
-        extra="forbid",
-        str_strip_whitespace=True,
-        validate_assignment=True,
-        use_enum_values=True,
-        populate_by_name=True,
-        from_attributes=True,
-    )
+    model_config = APIModel.model_config.copy()
+    model_config["from_attributes"] = True
 ```
 
 ORM objects SHOULD be converted using:

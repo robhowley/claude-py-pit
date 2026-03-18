@@ -306,6 +306,31 @@ few entities.
 
 ------------------------------------------------------------------------
 
+## When db/session.py outgrows a single file
+
+The default layout co-locates Base, mixins, engine, session factory, and
+`get_db` in `db/session.py`. This is correct for most services.
+
+Consider splitting when:
+
+- The file has 3+ mixins that obscure the session/engine setup
+- The project adds an async engine alongside the sync engine
+- CLI or worker entrypoints need Base without importing engine/session
+
+Split pattern:
+
+    db/
+      base.py       # Base, naming convention, mixins
+      session.py    # engine, SessionLocal, get_db (imports Base from base.py)
+
+Update all model imports to use `db.base` for Base. The Alembic env.py
+`target_metadata` import path must also be updated.
+
+Do not split preemptively. The single-file layout is simpler and correct
+until one of the triggers above applies.
+
+------------------------------------------------------------------------
+
 ## Import discipline
 
 Prefer explicit imports.

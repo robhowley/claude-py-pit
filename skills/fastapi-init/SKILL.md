@@ -12,6 +12,7 @@ Scaffold a new FastAPI project end-to-end. This skill coordinates with others in
 
 - **uv skill**: use for all `uv add`, `uv run`, and environment commands — never fall back to pip
 - **click-cli skill**: consult if the user wants an extended CLI beyond the basic server entry point
+- **fastapi-errors skill**: the authority on the full error architecture — domain subclasses, error codes, auth error patterns, and existing-repo strategy
 
 ---
 
@@ -200,6 +201,8 @@ class NotFoundError({PkgName}Error):
     detail = "Resource not found."
 ```
 
+See the **fastapi-errors** skill for the full error architecture: domain subclasses, error codes, auth error patterns, and existing-repo strategy.
+
 ### {pkg_name}/schemas/base.py
 
 ```python
@@ -217,14 +220,8 @@ class APIModel(BaseModel):
 
 
 class ReadModel(APIModel):
-    model_config = ConfigDict(
-        extra="forbid",
-        str_strip_whitespace=True,
-        validate_assignment=True,
-        use_enum_values=True,
-        populate_by_name=True,
-        from_attributes=True,
-    )
+    model_config = APIModel.model_config.copy()
+    model_config["from_attributes"] = True
 ```
 
 ### {pkg_name}/main.py
@@ -254,6 +251,7 @@ app = FastAPI(title=settings.app_name, lifespan=lifespan)
 app.include_router(health.router, prefix="/api/v1")
 
 
+# see fastapi-errors skill for extended patterns (context logging, error codes, auth errors)
 @app.exception_handler({PkgName}Error)
 async def {pkg_name}_error_handler(request: Request, exc: {PkgName}Error) -> JSONResponse:
     return JSONResponse(status_code=exc.status_code, content={"detail": exc.detail})
@@ -327,7 +325,11 @@ TEST_DATABASE_URL = "sqlite:///:memory:"
 
 @pytest.fixture(scope="session")
 def engine():
-    """One engine for the whole test session — schema created once."""
+    """One engine for the whole test session — schema created once.
+
+    Assumes serial execution (no pytest-xdist). For parallel workers, switch to
+    a file-based SQLite (e.g. sqlite:///tmp/test_{worker_id}.db) or a per-worker engine.
+    """
     eng = create_engine(TEST_DATABASE_URL, connect_args={"check_same_thread": False})
     Base.metadata.create_all(eng)
     yield eng
@@ -393,6 +395,16 @@ uv run {pkg_name} serve --help
 ```
 
 Both should succeed with no errors before handing the project to the user.
+
+---
+
+## What's next
+
+The scaffold is ready to extend. Common next steps:
+
+- **Add models** - use the `sqlalchemy-models` skill to define ORM entities under `models/`
+- **Initialize migrations** - use the `alembic-migrations` skill to set up Alembic after adding models
+- **Add schemas** - use the `pydantic-schemas` skill for request/response schemas beyond the base classes
 
 ---
 
