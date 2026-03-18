@@ -77,6 +77,7 @@ Build this layout under the project root:
 │   │           └── health.py
 │   ├── db/
 │   │   ├── __init__.py
+│   │   ├── base.py            # Base, TimestampMixin, naming convention
 │   │   └── session.py         # engine + SessionLocal + get_db
 │   ├── models/
 │   │   └── __init__.py        # SQLAlchemy declarative models
@@ -126,18 +127,23 @@ class Settings(BaseSettings):
 settings = Settings()
 ```
 
-### {pkg_name}/db/session.py
+### {pkg_name}/db/base.py
 
-`get_db` is the single canonical source of truth for database sessions in routes and tests — this is what makes DI overrides in tests work cleanly. Background tasks run outside the FastAPI DI lifecycle and must open sessions via `SessionLocal` directly.
+Schema infrastructure - Base class, naming convention, and shared mixins. Models import `Base` from here.
 
 ```python
 from datetime import datetime, timezone
-from typing import Generator
 
-from sqlalchemy import DateTime, create_engine
-from sqlalchemy.orm import DeclarativeBase, Mapped, Session, mapped_column, sessionmaker
+from sqlalchemy import DateTime, MetaData
+from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
-from {pkg_name}.core.config import settings
+convention = {
+    "ix": "ix_%(column_0_label)s",
+    "uq": "uq_%(table_name)s_%(column_0_name)s",
+    "ck": "ck_%(table_name)s_%(constraint_name)s",
+    "fk": "fk_%(table_name)s_%(column_0_name)s_%(referred_table_name)s",
+    "pk": "pk_%(table_name)s",
+}
 
 
 def utcnow() -> datetime:
@@ -145,7 +151,7 @@ def utcnow() -> datetime:
 
 
 class Base(DeclarativeBase):
-    pass
+    metadata = MetaData(naming_convention=convention)
 
 
 class TimestampMixin:
@@ -153,7 +159,19 @@ class TimestampMixin:
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=utcnow, onupdate=utcnow,
     )
+```
 
+### {pkg_name}/db/session.py
+
+Connection infrastructure. `get_db` is the single canonical source of truth for database sessions in routes and tests - this is what makes DI overrides in tests work cleanly. Background tasks run outside the FastAPI DI lifecycle and must open sessions via `SessionLocal` directly.
+
+```python
+from typing import Generator
+
+from sqlalchemy import create_engine
+from sqlalchemy.orm import Session, sessionmaker
+
+from {pkg_name}.core.config import settings
 
 engine = create_engine(settings.database_url)
 SessionLocal = sessionmaker(bind=engine)
@@ -317,7 +335,8 @@ from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
 from sqlalchemy.orm import Session, sessionmaker
 
-from {pkg_name}.db.session import Base, get_db
+from {pkg_name}.db.base import Base
+from {pkg_name}.db.session import get_db
 from {pkg_name}.main import app
 
 TEST_DATABASE_URL = "sqlite:///:memory:"

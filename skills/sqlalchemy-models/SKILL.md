@@ -115,7 +115,7 @@ When applying this skill:
 
 ### 1) Base class
 
-Prefer a single canonical base in `db/session.py`, co-located with the engine and session factory. Include a naming convention so Alembic generates predictable constraint names:
+Prefer a single canonical base in `db/base.py`, separate from the engine and session factory. Include a naming convention so Alembic generates predictable constraint names:
 
 ```python
 from sqlalchemy import MetaData
@@ -134,10 +134,10 @@ class Base(DeclarativeBase):
     metadata = MetaData(naming_convention=convention)
 ```
 
-Model files import Base from `db/session.py`:
+Model files import Base from `db/base.py`:
 
 ```python
-from {pkg_name}.db.session import Base
+from {pkg_name}.db.base import Base
 ```
 
 Do not create multiple unrelated declarative bases unless the repo already
@@ -271,7 +271,8 @@ other layouts it may be `app/models/` or similar.
 ```text
 {pkg_name}/
   db/
-    session.py          # Base, TimestampMixin, engine, SessionLocal, get_db
+    base.py             # Base, TimestampMixin, naming convention
+    session.py          # engine, SessionLocal, get_db
   models/
     __init__.py
     user.py
@@ -280,7 +281,7 @@ other layouts it may be `app/models/` or similar.
 
 Where appropriate:
 
-- `Base` and shared mixins live in `db/session.py` (co-located with engine and session)
+- `Base` and shared mixins live in `db/base.py` (separate from engine and session)
 - each entity gets its own module under `models/`
 - `models/__init__.py` should import all model classes so that
   `Base.metadata` is fully populated when Alembic (or any other tool)
@@ -291,31 +292,6 @@ few entities.
 
 ------------------------------------------------------------------------
 
-## When db/session.py outgrows a single file
-
-The default layout co-locates Base, mixins, engine, session factory, and
-`get_db` in `db/session.py`. This is correct for most services.
-
-Consider splitting when:
-
-- The file has 3+ mixins that obscure the session/engine setup
-- The project adds an async engine alongside the sync engine
-- CLI or worker entrypoints need Base without importing engine/session
-
-Split pattern:
-
-    db/
-      base.py       # Base, naming convention, mixins
-      session.py    # engine, SessionLocal, get_db (imports Base from base.py)
-
-Update all model imports to use `db.base` for Base. The Alembic env.py
-`target_metadata` import path must also be updated.
-
-Do not split preemptively. The single-file layout is simpler and correct
-until one of the triggers above applies.
-
-------------------------------------------------------------------------
-
 ## Import discipline
 
 Prefer explicit imports.
@@ -323,7 +299,7 @@ Prefer explicit imports.
 Good:
 
 ```python
-from {pkg_name}.db.session import Base
+from {pkg_name}.db.base import Base
 from {pkg_name}.models.user import User
 from {pkg_name}.models.post import Post
 ```

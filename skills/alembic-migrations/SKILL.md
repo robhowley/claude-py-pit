@@ -40,7 +40,7 @@ Alembic only detects models that are **imported at runtime**.
 A canonical module must import every ORM model so metadata is complete.
 
 Do not assume `app/`. Use the project's existing `Base` definition --
-typically at `{pkg_name}/db/session.py` (see sqlalchemy-models skill).
+typically at `{pkg_name}/db/base.py` (see sqlalchemy-models skill).
 
 Example:
 
@@ -53,7 +53,7 @@ from {pkg_name}.models.order import Order
 Alembic must reference:
 
 ```python
-from {pkg_name}.db.session import Base
+from {pkg_name}.db.base import Base
 
 target_metadata = Base.metadata
 ```
@@ -171,7 +171,7 @@ Before generating anything:
    exist. If they do, **modify the existing configuration** rather than
    reinitializing. Never run `alembic init` if `alembic/` already exists.
 2. Identify where `Base` is defined. If the project used the
-   sqlalchemy-models skill, it will be at `{pkg_name}/db/session.py`.
+   sqlalchemy-models skill, it will be at `{pkg_name}/db/base.py`.
 3. Identify which module imports all models (typically
    `{pkg_name}/models/__init__.py`). This is the module env.py must import.
 4. Note the existing package root. For fastapi-init projects it is
@@ -230,7 +230,7 @@ from alembic import context
 from sqlalchemy import engine_from_config, pool
 
 from {pkg_name}.core.config import settings
-from {pkg_name}.db.session import Base
+from {pkg_name}.db.base import Base
 import {pkg_name}.models  # noqa: F401 — ensures all models are imported
 
 config = context.config
@@ -273,7 +273,7 @@ else:
 ```
 
 **Naming conventions**: The naming convention is defined on `Base` in
-`db/session.py` (see sqlalchemy-models skill) and is picked up
+`db/base.py` (see sqlalchemy-models skill) and is picked up
 automatically by Alembic through `target_metadata = Base.metadata`.
 
 **Async note**: Alembic migrations run synchronously even in async
