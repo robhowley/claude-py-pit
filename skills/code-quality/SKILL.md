@@ -71,6 +71,7 @@ developer with exact commands to verify it works.
 - Keep the quality contract **easy to run locally** and **easy to mirror in CI**.
 - Prefer **incremental adoption** in existing repos when a big-bang migration is unnecessary.
 - Keep configuration centralized where practical, preferably in `pyproject.toml`.
+- Prefer narrow rule-level ignores over broad file-level ignores. Document non-obvious ignores briefly. A large ignore list signals stack drift.
 
 **MUST NOT:**
 
@@ -117,7 +118,9 @@ This stack is preferred because it is:
    and existing suppressions.
 5. **Call out removals** — explicitly name overlapping tools to delete and why.
 6. **End with verification commands** — exact `ruff`, `pre-commit`, and
-   markdownlint commands to confirm the stack is working.
+   markdownlint commands to confirm the stack is working. CI quality steps
+   should mirror these: Ruff check, Ruff format check, Markdown lint, and
+   tests (if present).
 
 ---
 
@@ -255,108 +258,6 @@ Examples:
 - a repo with Black + isort + Flake8 can migrate toward Ruff if the user wants simplification
 - a repo with partial pre-commit can add Ruff and Markdown lint without a full tooling reset
 - a repo with a working non-Ruff stack should not be rewritten unless the user wants the change
-
----
-
-# Migration Bias
-
-When the user wants to simplify or modernize tooling, the preferred migration target is:
-
-- **Ruff**
-- **pre-commit**
-- **Markdown lint**
-- minimal sanity hooks
-
-Migration should aim to:
-
-- remove redundancy
-- reduce tool count
-- preserve developer ergonomics
-- preserve CI clarity
-- keep adoption understandable
-
-When migrating to Ruff, prefer to remove overlapping tools rather than run both indefinitely.
-
----
-
-# Config Discipline
-
-Prefer `pyproject.toml` as the canonical configuration home for:
-
-- Ruff
-- pytest, when applicable
-- other Python tooling that supports it
-
-Use separate config files only when a tool truly requires them.
-
-Do not create config sprawl.
-
----
-
-# Pre-commit Discipline
-
-Pre-commit should be:
-
-- fast enough that developers will actually use it
-- aligned with the repo's real standards
-- limited to checks with strong signal
-
-Do not overload pre-commit with slow, redundant, or low-value hooks.
-
-Pre-commit is an enforcement layer, not a philosophy engine.
-
----
-
-# CI Discipline
-
-CI should mostly replay the same code-health contract expected locally.
-
-Recommended CI quality steps:
-
-- Ruff check
-- Ruff format check
-- Markdown lint
-- tests, if present
-
-Avoid introducing style tools in CI that developers are not expected to run locally.
-
----
-
-# Ignore Philosophy
-
-Use a minimal-ignore approach.
-
-Rules:
-
-- prefer fixing code over expanding ignore lists
-- prefer narrow rule-level ignores over broad file-level ignores
-- document non-obvious ignores briefly
-- do not accumulate unexplained exceptions
-
-A large ignore list is usually a signal that the stack is drifting.
-
----
-
-# Adoption Philosophy
-
-This skill should make the stack **easy to adopt**.
-
-Preferred adoption characteristics:
-
-- quick install
-- one obvious command path
-- one obvious config location
-- one obvious local enforcement layer
-- one obvious CI replay
-
-For existing repos, favor changes that are:
-
-- understandable
-- reviewable
-- low-drama
-- easy to roll out incrementally
-
-Do not require perfection before adoption begins.
 
 ---
 

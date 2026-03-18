@@ -111,21 +111,6 @@ When applying this skill:
 
 ------------------------------------------------------------------------
 
-## Canonical output requirements
-
-A correct solution produced by this skill should usually include:
-
-- a single shared `DeclarativeBase`
-- SQLAlchemy 2.x typed fields with `Mapped[...]`
-- `mapped_column(...)` for columns
-- explicit `relationship(...)` declarations
-- symmetric `back_populates` for bidirectional relationships
-- a predictable `models/` package structure
-- import patterns that avoid circular dependencies
-- optional shared mixins only when they reduce duplication cleanly
-
-------------------------------------------------------------------------
-
 ## Preferred patterns
 
 ### 1) Base class

@@ -340,18 +340,15 @@ Do not invent different filter naming conventions per endpoint.
 
 ------------------------------------------------------------------------
 
-# Command Request / Response Schemas
+# Command, Batch, and Aggregate Schemas
 
-Non-CRUD actions SHOULD use explicit command request/response schemas.
+Non-CRUD endpoints need explicit schema types too - do not inline these
+as untyped dicts.
 
-Examples of command endpoints:
+### Command Request / Response
 
--   activate user
--   cancel order
--   refund payment
--   generate report
-
-Example:
+Non-CRUD actions (activate user, cancel order, refund payment, generate
+report) use explicit command request/response schemas.
 
 ```python
 class RefundPaymentRequest(CommandModel):
@@ -364,20 +361,14 @@ class RefundPaymentResponse(APIModel):
     refunded_at: datetime
 ```
 
-Do not inline command payloads as untyped dictionaries.
-
-Naming pattern — pick one and use it consistently:
+Naming pattern - pick one and use it consistently:
 
 -   `{Action}{Resource}Request`, or
 -   `{Resource}{Action}Request`
 
-------------------------------------------------------------------------
+### Batch Requests
 
-# Batch Request Schemas
-
-Batch operations SHOULD use explicit batch request models.
-
-Example:
+Batch operations use explicit batch request models.
 
 ```python
 class BulkDisableUsersRequest(BatchModel):
@@ -387,20 +378,10 @@ class BulkDisableUsersRequest(BatchModel):
 Do not pass bare lists as request bodies when the payload has semantic
 meaning.
 
-------------------------------------------------------------------------
+### Aggregate / Summary Responses
 
-# Aggregate / Summary Response Schemas
-
-Computed endpoints MUST use explicit response schemas.
-
-Examples:
-
--   analytics
--   reports
--   summaries
--   stats
-
-Example:
+Computed endpoints (analytics, reports, summaries, stats) MUST use
+explicit response schemas.
 
 ```python
 class RevenueSummary(APIModel):
