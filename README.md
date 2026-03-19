@@ -37,6 +37,7 @@ Skills activate automatically when the agent detects relevant intent — no manu
 
 | Skill                | Activates when LLM detects                                                              |
 |----------------------|--------------------------------------------------------------------------------------------|
+| `implementation-protocol` | any non-trivial feature implementation — orchestrates domain skills below          |
 | `fastapi-init`       | new FastAPI service, scaffold an API, new microservice                                     |
 | `uv`                 | dependency management, lockfiles, env setup, migration from pip/poetry                     |
 | `click-cli`          | designing or generating a new Click CLI                                                    |
